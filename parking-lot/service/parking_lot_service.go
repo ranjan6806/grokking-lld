@@ -14,7 +14,8 @@ type ParkingLotServiceInterface interface {
 }
 
 type ParkingLotService struct {
-	spots          map[models.SpotType][]models.SpotInterface
+	spotRepo       models.SpotRepositoryInterface
+	ticketRepo     models.TicketRepositoryInterface
 	displayBoard   DisplayBoardServiceInterface
 	paymentService PaymentServiceInterface
 	capacities     map[models.SpotType]int
@@ -47,13 +48,27 @@ func (pl *ParkingLotService) IssueTicket(vehicle models.VehicleInterface, paymen
 	}
 
 	// Find a free spot of the required spot type
-	for _, spot := range pl.spots[spotType] {
-		if spot.IsFree() {
+	spots, _ := pl.spotRepo.GetAllSpots()
+
+	for _, spot := range spots {
+		if spot.GetSpotType() == spotType && spot.IsFree() {
 			// Park the vehicle
 			spot.ParkVehicle(vehicle)
 			pl.currentUsage[spotType]++
 			pl.displayBoard.DecrementFreeSpots(spotType)
-			return models.NewTicket(vehicle, spot, payment), nil
+
+			ticket := models.NewTicket(vehicle, spot, payment)
+			err = pl.ticketRepo.CreateTicket(ticket)
+			if err != nil {
+				// Rollback spot occupation
+				spot.RemoveVehicle()
+				pl.spotRepo.UpdateSpot(spot)
+				pl.currentUsage[spotType]--
+				pl.displayBoard.IncrementFreeSpots(spotType)
+				return nil, err
+			}
+
+			return ticket, nil
 		}
 	}
 
@@ -61,9 +76,26 @@ func (pl *ParkingLotService) IssueTicket(vehicle models.VehicleInterface, paymen
 }
 
 func (pl *ParkingLotService) ProcessExit(ticket models.TicketInterface) error {
-	ticket.GetSpot().RemoveVehicle()
+	spot := ticket.GetSpot()
+	spotType := spot.GetSpotType()
+
+	if spot.IsFree() {
+		return errors.New("spot is free")
+	}
+
+	spot.RemoveVehicle()
+	err := pl.spotRepo.UpdateSpot(spot)
+	if err != nil {
+		return err
+	}
+
 	pl.currentUsage[ticket.GetSpot().GetSpotType()]--
-	pl.displayBoard.IncrementFreeSpots(ticket.GetSpot().GetSpotType())
+	pl.displayBoard.IncrementFreeSpots(spotType)
+
+	err = pl.ticketRepo.DeleteTicket(ticket.GetID())
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -73,6 +105,8 @@ func (pl *ParkingLotService) ShowFreeSpots() map[models.SpotType]int {
 }
 
 func NewParkingLotService(
+	spotRepo models.SpotRepositoryInterface,
+	ticketRepo models.TicketRepositoryInterface,
 	spots map[models.SpotType][]models.SpotInterface,
 	displayBoard DisplayBoardServiceInterface,
 	capacities map[models.SpotType]int,
@@ -86,7 +120,8 @@ func NewParkingLotService(
 	}
 
 	pl := &ParkingLotService{
-		spots:          spots,
+		spotRepo:       spotRepo,
+		ticketRepo:     ticketRepo,
 		displayBoard:   displayBoard,
 		paymentService: paymentService,
 		capacities:     capacities,

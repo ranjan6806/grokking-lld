@@ -4,16 +4,31 @@ import (
 	"fmt"
 	"parking-lot/controller"
 	"parking-lot/models"
+	"parking-lot/repositories"
 	"parking-lot/service"
 )
 
 func main() {
+	// Initialize Repositories
+	spotRepo := repositories.NewSpotRepository()
+	ticketRepo := repositories.NewTicketRepository()
+
 	// Define spots for each SpotType
 	spots := map[models.SpotType][]models.SpotInterface{
 		models.Compact:        {models.NewSpot(1, models.Compact), models.NewSpot(2, models.Compact), models.NewSpot(3, models.Compact)},
 		models.Large:          {models.NewSpot(4, models.Large), models.NewSpot(5, models.Large)},
 		models.MotorcycleSpot: {models.NewSpot(6, models.MotorcycleSpot)},
 		models.Handicapped:    {models.NewSpot(7, models.Handicapped)},
+	}
+
+	for _, spotList := range spots {
+		for _, spot := range spotList {
+			err := spotRepo.CreateSpot(spot)
+			if err != nil {
+				fmt.Printf("Error creating spot ID %d: %v\n", spot.GetID(), err)
+				return
+			}
+		}
 	}
 
 	// Define capacities for each SpotType
@@ -31,7 +46,14 @@ func main() {
 	paymentService := service.NewPaymentService()
 
 	// Initialize ParkingLotService with per-SpotType capacities and PaymentService
-	parkingLotService := service.NewParkingLotService(spots, displayBoard, capacities, paymentService)
+	parkingLotService := service.NewParkingLotService(
+		spotRepo,
+		ticketRepo,
+		spots,
+		displayBoard,
+		capacities,
+		paymentService,
+	)
 
 	// Initialize Controllers
 	parkingController := controller.NewParkingController(parkingLotService)
