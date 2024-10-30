@@ -1,9 +1,12 @@
 package service
 
-import "parking-lot/models"
+import (
+	"errors"
+	"parking-lot/models"
+)
 
 type PaymentServiceInterface interface {
-	ProcessPayment(ticket models.TicketInterface, amount float64, method models.PaymentMethod) models.PaymentInterface
+	ProcessPayment(payment models.PaymentInterface, amount float64) (bool, error)
 }
 
 type PaymentService struct{}
@@ -12,10 +15,10 @@ func NewPaymentService() *PaymentService {
 	return &PaymentService{}
 }
 
-func (ps *PaymentService) ProcessPayment(ticket models.TicketInterface, amount float64, method models.PaymentMethod) models.PaymentInterface {
-	return &models.Payment{
-		Ticket:        ticket,
-		Amount:        amount,
-		PaymentMethod: method,
+func (ps *PaymentService) ProcessPayment(payment models.PaymentInterface, amount float64) (bool, error) {
+	if payment == nil {
+		return false, errors.New("payment is nil")
 	}
+
+	return payment.ProcessPayment(amount)
 }

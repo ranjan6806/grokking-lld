@@ -1,14 +1,5 @@
 package models
 
-type SpotType string
-
-const (
-	Handicapped    SpotType = "Handicapped"
-	Compact        SpotType = "Compact"
-	Large          SpotType = "Large"
-	MotorcycleSpot SpotType = "MotorcycleSpot"
-)
-
 type SpotInterface interface {
 	GetID() int
 	GetSpotType() SpotType
@@ -46,7 +37,6 @@ func (s *Spot) RemoveVehicle() {
 	s.Free = true
 }
 
-// Factory function returns SpotInterface
 func NewSpot(id int, spotType SpotType) SpotInterface {
 	return &Spot{ID: id, SpotType: spotType, Free: true}
 }

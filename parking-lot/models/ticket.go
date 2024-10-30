@@ -7,6 +7,7 @@ type TicketInterface interface {
 	GetVehicle() VehicleInterface
 	GetSpot() SpotInterface
 	GetEntryTime() time.Time
+	GetPayment() PaymentInterface
 }
 
 type Ticket struct {
@@ -14,15 +15,7 @@ type Ticket struct {
 	Vehicle   VehicleInterface
 	Spot      SpotInterface
 	EntryTime time.Time
-}
-
-func NewTicket(vehicle VehicleInterface, spot SpotInterface) TicketInterface {
-	return &Ticket{
-		ID:        vehicle.GetLicensePlate(),
-		Vehicle:   vehicle,
-		Spot:      spot,
-		EntryTime: time.Now(),
-	}
+	Payment   PaymentInterface
 }
 
 func (t *Ticket) GetID() string {
@@ -39,4 +32,18 @@ func (t *Ticket) GetSpot() SpotInterface {
 
 func (t *Ticket) GetEntryTime() time.Time {
 	return t.EntryTime
+}
+
+func (t *Ticket) GetPayment() PaymentInterface {
+	return t.Payment
+}
+
+func NewTicket(vehicle VehicleInterface, spot SpotInterface, payment PaymentInterface) TicketInterface {
+	return &Ticket{
+		ID:        vehicle.GetLicensePlate(),
+		Vehicle:   vehicle,
+		Spot:      spot,
+		EntryTime: time.Now(),
+		Payment:   payment,
+	}
 }
