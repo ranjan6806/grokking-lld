@@ -14,7 +14,7 @@ func main() {
 	// Initialize repositories, balance manager, service and controller
 	userRepo := repository.NewInMemoryUserRepository()
 	groupRepo := repository.NewGroupRepository()
-	balanceRepo := repository.NewInMemoryBalanceRepository()
+	balanceRepo := repository.GetBalanceRepositoryInstance()
 
 	// Initialize balance manager with repository
 	balanceManager := balance.NewBalanceManager(balanceRepo)
