@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-	"fmt"
 	"splitwise/balance"
 	"splitwise/expenses"
 	"splitwise/models"
@@ -33,11 +31,6 @@ func (s *SplitwiseService) AddExpense(
 ) {
 	expense := s.ExpenseFactory.CreateExpense(amount, payer, strategy, receivers)
 	splits := expense.Strategy.CalculateSplit(expense.Amount, expense.Receivers)
-
-	expenseString, _ := json.Marshal(expense)
-	fmt.Println("Debug expense - %+v\n", string(expenseString))
-	fmt.Println("Debug splits - %+v\n", splits)
-
 	s.BalanceManager.AddExpense(splits, payer)
 }
 

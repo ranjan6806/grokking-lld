@@ -1,7 +1,6 @@
 package models
 
 type User struct {
-	ID      string
-	Name    string
-	Balance map[string]float64
+	ID   string
+	Name string
 }

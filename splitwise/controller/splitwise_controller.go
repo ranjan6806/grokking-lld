@@ -18,7 +18,7 @@ func NewSplitwiseController(service service.SplitwiseServiceInterface) *Splitwis
 }
 
 func (c *SplitwiseController) AddUser(name string) {
-	user := &models.User{Name: name, Balance: make(map[string]float64)}
+	user := &models.User{Name: name}
 	c.Service.AddUser(user)
 	fmt.Printf("User %s added with ID %s\n", name, user.ID)
 }

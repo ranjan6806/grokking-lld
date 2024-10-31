@@ -15,9 +15,16 @@ type GroupRepositoryInterface interface {
 }
 
 type BalanceRepositoryInterface interface {
+	// User level balance management
 	SaveBalance(userID string, balance map[string]float64)
 	GetBalance(userID string) map[string]float64
 	UpdateBalance(userID string, balance map[string]float64)
 	ClearBalances()
 	GetAllUsers() []string
+
+	// Group level balance management
+	SaveGroupBalance(groupID string, balance map[string]map[string]float64)
+	GetGroupBalance(groupID, userID string) map[string]float64
+	UpdateGroupBalance(groupID string, userID string, balance map[string]float64)
+	GetAllGroupUsers(groupID string) []string
 }

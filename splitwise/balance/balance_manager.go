@@ -51,6 +51,44 @@ func (bm *BalanceManager) SettleBetweenUsers(user1ID, user2ID string) {
 	bm.BalanceRepo.UpdateBalance(user2ID, user2Balance)
 }
 
+func (bm *BalanceManager) AddGroupExpense(groupID string, expense map[string]float64, payer *models.User, members []*models.User) {
+	totalMembers := len(members)
+	splitAmount := expense[payer.ID] / float64(totalMembers)
+
+	for _, member := range members {
+		memberID := member.ID
+		if memberID == payer.ID {
+			continue
+		}
+
+		// Retrieve current group balance
+		payerGroupBalance := bm.BalanceRepo.GetGroupBalance(groupID, payer.ID)
+		memberGroupBalance := bm.BalanceRepo.GetGroupBalance(groupID, memberID)
+
+		// Update group balances for each user in the group
+		payerGroupBalance[memberID] += splitAmount
+		memberGroupBalance[payer.ID] -= splitAmount
+
+		bm.BalanceRepo.UpdateGroupBalance(groupID, payer.ID, payerGroupBalance)
+		bm.BalanceRepo.UpdateGroupBalance(groupID, memberID, memberGroupBalance)
+	}
+}
+
+func (bm *BalanceManager) SettleGroup(groupID string) {
+	groupUsers := bm.BalanceRepo.GetAllGroupUsers(groupID)
+
+	for _, userID := range groupUsers {
+		userBalance := bm.BalanceRepo.GetBalance(userID)
+
+		for otherUserID := range userBalance {
+			userBalance[otherUserID] = 0
+		}
+
+		// Update the cleared balance back in the repository
+		bm.BalanceRepo.UpdateGroupBalance(groupID, userID, userBalance)
+	}
+}
+
 func NewBalanceManager(balanceRepo repository.BalanceRepositoryInterface) BalanceManagerInterface {
 	return &BalanceManager{
 		BalanceRepo: balanceRepo,
