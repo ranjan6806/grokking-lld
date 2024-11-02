@@ -19,11 +19,11 @@ func main() {
 	// Create a branch and add it to hotel
 	branch1 := hotel_branch.NewBranch("branch1", "Main branch")
 	branchRepo.AddBranch(branch1)
-	hotel.AddBranch(*branch1)
+	hotel.AddBranch(branch1)
 
 	branch2 := hotel_branch.NewBranch("branch2", "Second branch")
 	branchRepo.AddBranch(branch2)
-	hotel.AddBranch(*branch2)
+	hotel.AddBranch(branch2)
 
 	// Create rooms and add them to branch
 	room1 := room.NewRoom(room.RoomTypeDeluxe, "room1", room.RoomStatusAvailable, 300)
@@ -34,15 +34,14 @@ func main() {
 	// Print hotel details
 	retrievedHotel, err := hotelRepo.GetHotel("hotel1")
 	if err == nil {
-		fmt.Printf("Hotel: %s, Branches: %+v\n", retrievedHotel.Name, retrievedHotel.Branches)
+		fmt.Printf("Hotel: %+v\n", retrievedHotel)
 	}
 
-	// Print branch details
-	retrievedBranch, err := branchRepo.GetBranch("branch1")
-	if err != nil {
-		fmt.Printf("Branch: %s, Rooms: ", retrievedBranch.Name)
-		for id, room := range retrievedBranch.Rooms {
-			fmt.Printf("\nRoom ID: %s, Type: %s, Available: %v", id, room.GetRoomNumber(), room.IsAvailable())
+	for _, brn := range retrievedHotel.Branches {
+		fmt.Printf("brn - %+v\n", brn)
+
+		for _, rm := range brn.Rooms {
+			fmt.Printf("room - %+v\n", rm)
 		}
 	}
 

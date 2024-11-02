@@ -8,18 +8,18 @@ import (
 type Hotel struct {
 	HotelID  string
 	Name     string
-	Branches []hotel_branch.HotelBranch
+	Branches []*hotel_branch.HotelBranch
 }
 
 func NewHotel(id, name string) *Hotel {
 	return &Hotel{
 		HotelID:  id,
 		Name:     name,
-		Branches: make([]hotel_branch.HotelBranch, 0),
+		Branches: make([]*hotel_branch.HotelBranch, 0),
 	}
 }
 
-func (h *Hotel) AddBranch(b hotel_branch.HotelBranch) error {
+func (h *Hotel) AddBranch(b *hotel_branch.HotelBranch) error {
 	h.Branches = append(h.Branches, b)
 	return nil
 }
