@@ -8,6 +8,7 @@ import (
 type HotelRepository interface {
 	AddHotel(hotel *Hotel) error
 	GetHotel(id string) (*Hotel, error)
+	GetAllHotels() []*Hotel
 }
 
 type HotelRepositoryImpl struct {
@@ -42,4 +43,15 @@ func (r *HotelRepositoryImpl) GetHotel(id string) (*Hotel, error) {
 	}
 
 	return hotel, nil
+}
+
+func (r *HotelRepositoryImpl) GetAllHotels() []*Hotel {
+	r.mtx.RLock()
+	defer r.mtx.RUnlock()
+	hotels := make([]*Hotel, 0, len(r.hotels))
+	for _, hotel := range r.hotels {
+		hotels = append(hotels, hotel)
+	}
+
+	return hotels
 }

@@ -2,47 +2,70 @@ package main
 
 import (
 	"fmt"
+	"hotel-management/address"
+	"hotel-management/booking"
 	"hotel-management/hotel"
-	"hotel-management/hotel_branch"
 	"hotel-management/room"
+	"hotel-management/service"
 )
 
 func main() {
-	// Initialise repositories
+	// Initialise hotel repo
 	hotelRepo := hotel.NewHotelRepository()
-	branchRepo := hotel_branch.NewHotelBranchRepository()
 
-	// Create a hotel;
-	hotel := hotel.NewHotel("hotel1", "Raja Hotel")
-	hotelRepo.AddHotel(hotel)
+	// Initialise admin service
+	adminService := service.NewAdminService(hotelRepo)
 
-	// Create a branch and add it to hotel
-	branch1 := hotel_branch.NewBranch("branch1", "Main branch")
-	branchRepo.AddBranch(branch1)
-	hotel.AddBranch(branch1)
-
-	branch2 := hotel_branch.NewBranch("branch2", "Second branch")
-	branchRepo.AddBranch(branch2)
-	hotel.AddBranch(branch2)
-
-	// Create rooms and add them to branch
-	room1 := room.NewRoom(room.RoomTypeDeluxe, "room1", room.RoomStatusAvailable, 300)
-	room2 := room.NewRoom(room.RoomTypeDeluxe, "room2", room.RoomStatusAvailable, 300)
-	branch1.AddRoom(room1)
-	branch2.AddRoom(room2)
-
-	// Print hotel details
-	retrievedHotel, err := hotelRepo.GetHotel("hotel1")
-	if err == nil {
-		fmt.Printf("Hotel: %+v\n", retrievedHotel)
+	// Add hotel
+	err := adminService.AddHotel("h1", "Hotel 1")
+	if err != nil {
+		fmt.Println("error creating hotel", err)
 	}
 
-	for _, brn := range retrievedHotel.Branches {
-		fmt.Printf("brn - %+v\n", brn)
-
-		for _, rm := range brn.Rooms {
-			fmt.Printf("room - %+v\n", rm)
-		}
+	err = adminService.CreateHotelBranch("h1", "b1", "Branch 1", address.Address{City: "Delhi"})
+	if err != nil {
+		fmt.Println("error creating hotel branch", err)
 	}
 
+	err = adminService.CreateHotelBranch("h1", "b2", "Branch 2", address.Address{City: "Mumbai"})
+	if err != nil {
+		fmt.Println("error creating hotel branch", err)
+	}
+
+	err = adminService.AddRoom("r1", "h1", "b1", 200, room.RoomTypeStandard)
+	err = adminService.AddRoom("r2", "h1", "b1", 300, room.RoomTypeStandard)
+
+	err = adminService.AddRoom("r3", "h1", "b2", 400, room.RoomTypeStandard)
+	err = adminService.AddRoom("r4", "h1", "b2", 500, room.RoomTypeStandard)
+
+	err = adminService.ShowAllHotelDetails()
+	if err != nil {
+		fmt.Println("error showing hotel details", err)
+	}
+
+	// Initialise booking repository
+	bookingRepo := booking.NewBookingRepository()
+
+	// Initialise booking service
+	bookingService := service.NewBookingService(bookingRepo, adminService)
+
+	branch1, err := adminService.GetHotelBranch("h1", "b1")
+	if err != nil {
+		fmt.Println("error getting hotel branch", err)
+	}
+
+	err = bookingService.EnableHotelBranchBookings("h1", branch1)
+	if err != nil {
+		fmt.Println("error enabling hotel booking", err)
+	}
+
+	err = bookingService.BookRoom("book1", "h1", "b1", "guest1", room.RoomTypeStandard, 4, 500)
+	if err != nil {
+		fmt.Println("error booking room", err)
+	}
+
+	err = adminService.ShowAllHotelDetails()
+	if err != nil {
+		fmt.Println("error showing hotel details", err)
+	}
 }

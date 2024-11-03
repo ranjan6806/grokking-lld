@@ -8,29 +8,45 @@ import (
 
 type HotelBranch struct {
 	BranchID string
-	HotelID  string
 	Name     string
 	Address  address.Address
-	Rooms    []room.Room
+	Rooms    map[string]room.Room // map roomID -> Room
 }
 
-func NewBranch(id, name string) *HotelBranch {
+func NewBranch(id, name string, address address.Address) *HotelBranch {
 	return &HotelBranch{
 		BranchID: id,
-		Rooms:    make([]room.Room, 0),
+		Name:     name,
+		Address:  address,
+		Rooms:    make(map[string]room.Room),
 	}
 }
 
-func (h *HotelBranch) AddRoom(room room.Room) error {
-	h.Rooms = append(h.Rooms, room)
+func (b *HotelBranch) AddRoom(room room.Room) error {
+	_, exists := b.Rooms[room.GetRoomNumber()]
+	if exists {
+		return fmt.Errorf("room %s already exists", room.GetRoomNumber())
+	}
+
+	b.Rooms[room.GetRoomNumber()] = room
 	return nil
 }
 
-func (h *HotelBranch) GetRoom(roomID string) (room.Room, error) {
-	for _, room := range h.Rooms {
-		if room.GetRoomNumber() == roomID {
-			return room, nil
+func (b *HotelBranch) GetRoom(roomID string) (room.Room, error) {
+	for _, r := range b.Rooms {
+		if r.GetRoomNumber() == roomID {
+			return r, nil
 		}
 	}
 	return nil, fmt.Errorf("room not found")
+}
+
+func (b *HotelBranch) FindAvailableRoom(roomType room.RoomType) (room.Room, error) {
+	for _, r := range b.Rooms {
+		if r.GetRoomType() == roomType && r.IsAvailable() {
+			return r, nil
+		}
+	}
+
+	return nil, fmt.Errorf("room %s does not exists")
 }

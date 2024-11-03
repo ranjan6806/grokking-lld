@@ -8,26 +8,39 @@ import (
 type Hotel struct {
 	HotelID  string
 	Name     string
-	Branches []*hotel_branch.HotelBranch
+	Branches map[string]*hotel_branch.HotelBranch // map string -> hotel branch
 }
 
 func NewHotel(id, name string) *Hotel {
 	return &Hotel{
 		HotelID:  id,
 		Name:     name,
-		Branches: make([]*hotel_branch.HotelBranch, 0),
+		Branches: make(map[string]*hotel_branch.HotelBranch),
 	}
 }
 
 func (h *Hotel) AddBranch(b *hotel_branch.HotelBranch) error {
-	h.Branches = append(h.Branches, b)
+	_, exists := h.Branches[b.BranchID]
+	if exists {
+		return errors.New("hotel already exists")
+	}
+
+	h.Branches[b.BranchID] = b
 	return nil
 }
 
+func (h *Hotel) GetBranch(branchID string) (*hotel_branch.HotelBranch, error) {
+	if b, exists := h.Branches[branchID]; exists {
+		return b, nil
+	}
+
+	return nil, errors.New("branch not found")
+}
+
 func (h *Hotel) RemoveBranch(branchID string) error {
-	for i, branch := range h.Branches {
+	for _, branch := range h.Branches {
 		if branch.BranchID == branchID {
-			h.Branches = append(h.Branches[:i], h.Branches[i+1:]...)
+			delete(h.Branches, branchID)
 			return nil
 		}
 	}
